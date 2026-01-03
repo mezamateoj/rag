@@ -11,7 +11,7 @@ def search_command(query: str, limit: int = DEFAULT_SEARCH_LIMIT) -> list[dict]:
     stop_words = load_file("data", "stopwords.txt")
     results = []
     for movie in movies:
-        if has_substring(query, movie["title"], stop_words):
+        if has_substring(query, movie.title, stop_words):
             results.append(movie)
             if len(results) >= limit:
                 break
