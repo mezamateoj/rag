@@ -1,8 +1,11 @@
 import json
 import os
 import string
+from typing import List
 
 from nltk.stem import PorterStemmer
+
+from .schema import Movie, MovieListValidator
 
 DEFAULT_SEARCH_LIMIT = 5
 
@@ -10,10 +13,10 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 DATA_PATH = os.path.join(PROJECT_ROOT, "data", "movies.json")
 
 
-def load_movies() -> list[dict]:
+def load_movies() -> List[Movie]:
     with open(DATA_PATH, "r") as f:
         data = json.load(f)
-    return data["movies"]
+    return MovieListValidator.validate_python(data["movies"])
 
 
 def load_file(dir, filename) -> list[str]:
