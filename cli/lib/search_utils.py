@@ -36,10 +36,23 @@ def preprocess_text(s: str, stopwords: list[str]) -> list[str]:
     return words_list
 
 
-def has_substring(list_a, list_b, stop_words):
+def has_substring(list_a, list_b, stop_words=""):
+    if not stop_words:
+        stop_words = load_file("data", "stopwords.txt")
+
     stemmer = PorterStemmer()
     for a in preprocess_text(list_a, stop_words):
         for b in preprocess_text(list_b, stop_words):
             if stemmer.stem(a) in stemmer.stem(b):
                 return True
     return False
+
+
+def tokenize_text(text: str) -> list[str]:
+    stop_words = load_file("data", "stopwords.txt")
+
+    stemmer = PorterStemmer()  # <-- Creates stemmer
+    stemmed_words = []
+    for word in preprocess_text(text, stop_words):
+        stemmed_words.append(stemmer.stem(word))  # <-- Stems each word
+    return stemmed_words  # <-- Returns stemmed words

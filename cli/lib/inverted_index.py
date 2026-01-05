@@ -4,7 +4,7 @@ import string
 from typing import Dict, List, Set
 
 from .schema import Movie
-from .search_utils import load_movies
+from .search_utils import load_movies, tokenize_text
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 CACHE_PATH = os.path.join(PROJECT_ROOT, "cache")
@@ -17,23 +17,21 @@ class InvertedIndex:
         self.index_path = os.path.join(CACHE_PATH, "index.pkl")
         self.docmap_path = os.path.join(CACHE_PATH, "docmap.pkl")
 
-    def tokenize_text(self, movie_data: str) -> List[str]:
-        text = str.maketrans("", "", string.punctuation)
-        text = movie_data.translate(text).lower().strip()
-        return text.split()
-
     def __add_document(self, doc_id: int, text: str):
-        tokenize = self.tokenize_text(text)
+        tokenize = tokenize_text(text)
         for token in set(tokenize):
             self.index.setdefault(token, set()).add(doc_id)
 
-    def get_documents(self, term: str) -> List[int]:
+    def get_documents(self, term: str, index: Dict[str, Set[int]]) -> List[int]:
         text = str.maketrans("", "", string.punctuation)
         text = term.translate(text).lower().strip()
-        _set_doc_ids = self.index.get(term, set())
+
+        _set_doc_ids = index.get(term, set())
+
         return sorted(list(_set_doc_ids))
 
     def build(self):
+        print("building")
         movies = load_movies()
         for movie in movies:
             doc_description = f"{movie.title} {movie.description}"
@@ -52,10 +50,21 @@ class InvertedIndex:
                 elif file_path == self.docmap_path:
                     pickle.dump(self.docmap, file)
 
+    def load(self):
+        filenames = [self.index_path, self.docmap_path]
 
-def build_command(text: str) -> None:
+        for file_path in filenames:
+            with open(file_path, "rb") as file:
+                if file_path == self.index_path:
+                    index = pickle.load(file)
+
+                elif file_path == self.docmap_path:
+                    docmap = pickle.load(file)
+
+        return index, docmap
+
+
+def build_command() -> None:
     idx = InvertedIndex()
     idx.build()
     idx.save()
-    docs = idx.get_documents(text)
-    print(f"First document for token '{text}' = {docs[0]}")
